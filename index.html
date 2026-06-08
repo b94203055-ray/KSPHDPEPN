@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>KSP 200L HDPE Drum PN Selector</title>
+
+<style>
+body{font-family:Segoe UI;background:#eef3f8;margin:0;}
+.header{background:#002B5C;color:#fff;padding:15px 20px;font-weight:bold;}
+.container{max-width:1150px;margin:25px auto;display:flex;gap:25px;}
+.card{flex:1;background:#fff;padding:25px;border-radius:10px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+.row{margin-bottom:15px;}
+label{font-weight:600;margin-bottom:6px;display:block;}
+select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
+.output{font-size:20px;font-weight:bold;}
+.status.valid{color:green;}
+.status.warn{color:orange;}
+.status.invalid{color:red;}
+</style>
+</head>
+
+<body>
+
+<div class="header">KSP 200L HDPE Drum Part Number Selector</div>
+
+<div class="container">
+<div class="card">
+<h3>Specification</h3>
+<div id="selector"></div>
+</div>
+
+<div class="card">
+<h3>Result</h3>
+<div id="output" class="output">-</div>
+<div id="status"></div>
+<div id="drumSpec" style="margin-top:10px;font-size:14px;line-height:1.6;"></div>
+<button onclick="copyPN()">Copy</button>
+</div>
+</div>
+
+<script>
+
+/* ================= 基本 ================= */
+
+const basePackage = [
+['','-- Select --'],
+['T2','T2-Trilayer / Light blue'],
+['T8','T8-Advantage / Dark blue']
+];
+
+/* ===== Section B ===== */
+
+const B_material = [
+['','-- Select --'],
+['EPDM','EPDM O-rings'],
+['FKM','FKM O-rings'],
+['POE','POE O-rings']
+];
+
+const B_weep = [
+['','-- Select --'],
+['N','No weep holes'],
+['Y','With weep holes in top chime']
+];
+
+function getSectionB(){
+let m = val('B0');
+let w = val('B1');
+if(!m || !w) return null;
+
+if(m==='EPDM' && w==='N') return '1';
+if(m==='FKM'  && w==='N') return '2';
+if(m==='EPDM' && w==='Y') return '4';
+if(m==='FKM'  && w==='Y') return '5';
+if(m==='POE'  && w==='N') return 'A';
+if(m==='POE'  && w==='Y') return 'B';
+return null;
+}
+
+/* ===== Section C ===== */
+
+const series = [
+['','-- Select --'],
+['NONE','No drum insert'],
+['QCII','QCII'],
+['QCIII','QCIII'],
+['SLQC','SLQC']
+];
+
+const types = {
+QCII:[
+['DIT','DIT PFA QCII'],
+['DIP','DIP PE QCII']
+],
+QCIII:[
+['DI3T-3','DI3T PFA QCIII 3-port'],
+['DI3T-4','DI3T PFA QCIII 4-port'],
+['DT3P-3','DT3P PE QCIII 3-port'],
+['DT3P-4','DT3P PE QCIII 4-port']
+],
+SLQC:[
+['SLQC','SLQC port connections with dispense downtube and vent closure'],
+['SLQC_OM','Overmolding SLQC port connections']
+]
+};
+
+const orings = [
+['','-- Select --'],
+['SIL','FEP-encapsulated Silicone o-ring'],
+['FKM','FEP-encapsulated FKM o-ring'],
+['EPDM','FEP-encapsulated EPDM o-ring']
+];
+
+function getSectionC(){
+
+let s = val('C0');
+let t = val('C1');
+let o = val('C2');
+
+if(s==='NONE') return '01';
+if(!s || !t || !o) return null;
+
+if(s==='QCII'){
+if(t==='DIT'){
+if(o==='SIL') return '03';
+if(o==='FKM') return '04';
+if(o==='EPDM') return '05';
+}
+if(t==='DIP'){
+if(o==='SIL') return '06';
+if(o==='FKM') return '07';
+if(o==='EPDM') return '08';
+}
+}
+
+if(s==='QCIII'){
+if(t==='DI3T-3'){
+if(o==='SIL') return '11';
+if(o==='FKM') return '12';
+if(o==='EPDM') return '13';
+}
+if(t==='DI3T-4'){
+if(o==='SIL') return '14';
+if(o==='FKM') return '15';
+if(o==='EPDM') return '16';
+}
+if(t==='DT3P-3'){
+if(o==='SIL') return '17';
+if(o==='FKM') return '18';
+if(o==='EPDM') return '19';
+}
+if(t==='DT3P-4'){
+if(o==='SIL') return '20';
+if(o==='FKM') return '21';
+if(o==='EPDM') return '22';
+}
+}
+
+if(s==='SLQC'){
+if(t==='SLQC') return '09';
+if(t==='SLQC_OM') return '69';
+}
+
+return null;
+}
+
+/* ================= Other ================= */
+
+const others = [
+
+["Chemical keycode",[
+['','-- Select --'],
+['00','00-N/A'],
+['01','01-Nitric acid / Red'],
+['02','02-Sulfuric acid / Yellow'],
+['03','03-Ammonia / Green'],
+['04','04-Acetic acid / Brown'],
+['05','05-Hydrochloric acid / Blue'],
+['06','06-Hydrofluoric aicd'],
+['07','07-Ammonium fluoride'],
+['08','08-Phosphoric acid'],
+['09','09-Hydrogen peroxide'],
+['10','10-Acetone'],
+['11','11-Methanol'],
+['12','12-Methyl isobutyl ketone'],
+['13','13-Isopropyl alcohol'],
+['99','14-Uncoded'],
+['XX','Contact Entegris']
+]],
+
+["Special instructions",[
+['','-- Select --'],
+['0','Standard'],
+['3','QCIII no serial tag']
+]],
+
+["Shipping cap options",[
+['','-- Select --'],
+['0','Standard'],
+['3','Manual relief shipping cap'],
+['6','Vented shipping cap on DI']
+]],
+
+["Manufacturing options",[
+['','-- Select --'],
+['0','No Analytical data required']
+]],
+
+["Assembly speical options",[
+['','-- Select --'],
+['0','Standard'],
+['6','Vented plug in return side'],
+['K','Both sump and return are loose and taped only']
+]]
+
+];
+
+/* ================= UI ================= */
+
+function render(){
+let html='';
+
+html+=row('S0','Base package');
+html+=row('B0','O-ring for bung');
+html+=row('B1','Weep hole options');
+
+html+=row('C0','Drum insert series');
+html+=row('C1','Drum insert type');
+html+=row('C2','O-ring for shipping cap');
+
+others.forEach((d,i)=>html+=row(`O${i}`,d[0]));
+
+document.getElementById('selector').innerHTML=html;
+
+fill('S0',basePackage);
+fill('B0',B_material);
+fill('B1',B_weep);
+fill('C0',series);
+fill('C2',orings);
+others.forEach((d,i)=>fill(`O${i}`,d[1]));
+
+update();
+}
+
+function row(id,label){
+return `<div class="row">
+<label>${label}</label>
+<select id="${id}"></select>
+</div>`;
+}
+
+function fill(id,opts){
+let s=document.getElementById(id);
+let current=s.value;
+s.innerHTML='';
+opts.forEach(o=>{
+let op=document.createElement('option');
+op.value=o[0];
+op.text=o[1];
+s.appendChild(op);
+});
+if(current){
+for(let i=0;i<s.options.length;i++){
+if(s.options[i].value===current){
+s.selectedIndex=i; break;
+}
+}
+}
+}
+
+function val(id){
+return document.getElementById(id)?.value;
+}
+
+/* ================= update ================= */
+
+function update(){
+
+let s = val('C0');
+let t = val('C1');
+let skip = (s==='NONE');
+
+/* type */
+let typeSelect = document.getElementById('C1');
+if(!s || skip){
+typeSelect.disabled = true;
+fill('C1',[['','-- Select --']]);
+}else{
+typeSelect.disabled = false;
+if(typeSelect.options.length<=1){
+fill('C1',[['','-- Select --'],...types[s]]);
+}
+}
+
+/* o-ring */
+let oSelect = document.getElementById('C2');
+oSelect.disabled = !t || skip;
+
+/* chemical */
+document.getElementById('O0').disabled = skip;
+
+/* shipping cap */
+let shipCap = document.getElementById('O2');
+if(skip){
+shipCap.disabled = true;
+shipCap.value = '0';
+}else{
+shipCap.disabled = false;
+}
+
+/* special */
+let special = document.getElementById('O1');
+
+if(skip){
+fill('O1',[['0','Standard']]);
+special.value='0';
+}
+else if(t && t.includes('DT3P')){
+fill('O1',[['3','QCIII no serial tag']]);
+special.value='3';
+}
+else{
+if(special.options.length<=2){
+fill('O1',others[1][1]);
+}
+}
+
+/* ✅ Drum spec 修正 */
+
+function getText(id){
+let el = document.getElementById(id);
+if(!el || !el.value) return '';
+return el.options[el.selectedIndex].text;
+}
+
+let baseText   = getText('S0');
+let seriesText = getText('C0');
+let typeText   = getText('C1');
+let bungText   = getText('B0');
+let shipText   = skip ? 'Standard' : getText('C2');
+
+let line1 = baseText ? `Base package - <b>${baseText}</b>` : '';
+let line2 = (seriesText || typeText)
+  ? `Drum insert - <b>${seriesText}${typeText ? ' + ' + typeText : ''}</b>`
+  : '';
+let line3 = (bungText || shipText)
+  ? `O-ring for bung - <b>${bungText}</b>, O-ring for DI shipping cap - <b>${shipText}</b>`
+  : '';
+
+document.getElementById("drumSpec").innerHTML =
+[line1,line2,line3].filter(x=>x).join("<br>");
+
+/* PN */
+
+let B = getSectionB();
+let C = getSectionC();
+
+let parts = [
+val('S0'),
+B,
+C,
+skip ? '0' : val('O0'),
+val('O1'),
+shipCap.value,
+val('O3'),
+val('O4')
+];
+
+let pn = '';
+let complete = true;
+
+parts.forEach(p=>{
+if(!p){
+complete=false;
+}else{
+pn += p;
+}
+});
+
+document.getElementById("output").innerText = pn || "-";
+
+let status = document.getElementById("status");
+
+if(!complete){
+status.innerText="⚠ Part number incomplete";
+status.className="status warn";
+}
+else if(pn.includes('XX')){
+status.innerText="⚠ Contact Entegris required";
+status.className="status warn";
+}
+else{
+status.innerText="✔ Valid configuration";
+status.className="status valid";
+}
+
+}
+
+document.addEventListener("change", update);
+
+function copyPN(){
+let t=document.getElementById("output").innerText;
+navigator.clipboard.writeText(t);
+alert("Copied: "+t);
+}
+
+render();
+
+</script>
+
+</body>
+</html>
