@@ -338,7 +338,7 @@ let baseText   = getText('S0');
 let seriesText = getText('C0');
 let typeText   = getText('C1');
 let bungText   = getText('B0');
-let shipText   = skip ? 'N/A' : getText('C2');
+let shipText   = skip ? 'Standard' : getText('C2');
 
 let line1 = baseText ? `Base package - <b>${baseText}</b>` : '';
 let line2 = (seriesText || typeText)
