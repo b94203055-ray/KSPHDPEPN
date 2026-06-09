@@ -35,13 +35,28 @@ select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
 <div id="output" class="output">-</div>
 <div id="status"></div>
 <div id="drumSpec" style="margin-top:10px;font-size:14px;line-height:1.6;"></div>
-<button onclick="copyPN()">Copy</button>
+<button onclick="copyPN()">Copy Part Number</button>
+<div id="toolSpec" style="margin-top:10px;font-size:14px;color:#006600;font-weight:600;"></div>
 </div>
 </div>
 
 <script>
 
+let state = {
+  S0:'', B0:'', B1:'',
+  C0:'', C1:'', C2:'',
+  O0:'', O1:'', O2:'', O3:'', O4:''
+};
+
+
 /* ================= 基本 ================= */
+
+const toolMap = {
+  'NONE': '01-034684 (For 2" bung plug)',
+  'SLQC': '01-034684 (For 2" SLQC)',
+  'QCII': '153-366-2 (For QCII drum insert) & 01-034684 (For 2" bung plug)',
+  'QCIII': '01-030940 (For QCIII drum insert) & 01-034684 (For 2" bung plug)'
+};
 
 const basePackage = [
 ['','-- Select --'],
@@ -53,9 +68,9 @@ const basePackage = [
 
 const B_material = [
 ['','-- Select --'],
+['POE','POE O-rings'],
 ['EPDM','EPDM O-rings'],
-['FKM','FKM O-rings'],
-['POE','POE O-rings']
+['FKM','FKM O-rings']
 ];
 
 const B_weep = [
@@ -216,6 +231,7 @@ const others = [
 
 ];
 
+
 /* ================= UI ================= */
 
 function render(){
@@ -339,17 +355,21 @@ let seriesText = getText('C0');
 let typeText   = getText('C1');
 let bungText   = getText('B0');
 let shipText   = skip ? 'N/A' : getText('C2');
+let chemText = getText('O0');
 
 let line1 = baseText ? `Base package - <b>${baseText}</b>` : '';
 let line2 = (seriesText || typeText)
   ? `Drum insert - <b>${seriesText}${typeText ? ' + ' + typeText : ''}</b>`
   : '';
-let line3 = (bungText || shipText)
-  ? `O-ring for bung - <b>${bungText}</b>, O-ring for DI shipping cap - <b>${shipText}</b>`
+let line3 = chemText
+  ? `Keycode - <b>${chemText}</b>`
+  : '';
+let line4 = (bungText || shipText)
+  ? `O-ring for bung - <b>${bungText}</b><br>O-ring for DI shipping cap - <b>${shipText}</b>`
   : '';
 
 document.getElementById("drumSpec").innerHTML =
-[line1,line2,line3].filter(x=>x).join("<br>");
+[line1,line2,line3,line4].filter(x=>x).join("<br>");
 
 /* PN */
 
@@ -380,11 +400,27 @@ pn += p;
 
 document.getElementById("output").innerText = pn || "-";
 
+/* ===== Recommend Tool ===== */
+
+let seriesVal = document.getElementById('C0')?.value || 'NONE';
+
+console.log("seriesVal:", seriesVal);
+console.log("tool:", toolMap[seriesVal]);
+
+let toolText = '';
+
+if(seriesVal && toolMap[seriesVal]){
+  toolText = `Assembly tool - <br><b>${toolMap[seriesVal]}</b>`;
+}
+
+document.getElementById("toolSpec").innerHTML = toolText;
+
+
 let status = document.getElementById("status");
 
 if(!complete){
-status.innerText="⚠ Part number incomplete";
-status.className="status warn";
+  status.innerText="⚠ Please complete all required selections";
+  status.className="status warn";
 }
 else if(pn.includes('XX')){
 status.innerText="⚠ Contact Entegris required";
@@ -400,10 +436,15 @@ status.className="status valid";
 document.addEventListener("change", update);
 
 function copyPN(){
+  if(document.getElementById("status").className.includes("warn")){
+    alert("Please complete selections first");
+    return;
+  }
 let t=document.getElementById("output").innerText;
 navigator.clipboard.writeText(t);
 alert("Copied: "+t);
 }
+
 
 render();
 
