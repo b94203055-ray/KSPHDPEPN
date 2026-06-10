@@ -259,7 +259,7 @@ return null;
 
 const others = [
 
-["Chemical keycode",[
+["Chemical keycode (SLQC choose 00-N/A)",[
 ['','-- Select --'],
 ['00','00-N/A'],
 ['01','01-Nitric acid / Red'],
@@ -318,7 +318,7 @@ html+=row('B1','Weep hole options');
 
 html+=row('C0','Drum insert series');
 html+=row('C1','Drum insert type');
-html+=row('C2','O-ring for shipping cap');
+html+=row('C2','O-ring for shipping cap (No O-ring for SLQC, choose anyone)');
 
 others.forEach((d,i)=>html+=row(`O${i}`,d[0]));
 
