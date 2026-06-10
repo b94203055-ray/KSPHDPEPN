@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KSP 200L HDPE Drum PN Selector</title>
 
 <style>
@@ -17,6 +18,58 @@ select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
 .status.valid{color:green;}
 .status.warn{color:orange;}
 .status.invalid{color:red;}
+/* ✅ 手機版優化 */
+@media (max-width: 768px){
+
+  /* ✅ 改成上下排列 */
+  .container{
+    flex-direction: column;
+    margin:10px;
+  }
+
+  /* ✅ 卡片縮小 padding */
+  .card{
+    padding:15px;
+  }
+
+  /* ✅ 字體稍微放大（好讀） */
+  body{
+    font-size:16px;
+  }
+
+  /* ✅ Select 更容易點 */
+  select{
+    font-size:16px;
+    padding:12px;
+  }
+
+  /* ✅ Label 間距 */
+  label{
+    margin-bottom:4px;
+  }
+
+  /* ✅ row 間距加大 */
+  .row{
+    margin-bottom:18px;
+  }
+
+  /* ✅ 按鈕變大 */
+  button{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+  }
+
+  /* ✅ Result文字稍微縮小避免換行亂掉 */
+  .output{
+    font-size:18px;
+  }
+
+  /* ✅ Header縮一點 */
+  .header{
+    font-size:18px;
+  }
+}
 </style>
 </head>
 
