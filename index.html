@@ -77,13 +77,27 @@ select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
     font-size:18px;
   }
 }
-  @media (max-width: 768px){
+@media (max-width: 1150px){
+
+  .container{
+    flex-direction: column;
+  }
+
   .container .card:last-child{
-    position: relative;
-    top: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+
+    border-radius: 10px 10px 0 0;
+    padding: 10px;
+  }
+
+  body{
+    padding-bottom: 180px; /* ✅ 避免被蓋住 */
   }
 }
-
 </style>
 </head>
 
