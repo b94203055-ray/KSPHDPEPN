@@ -197,6 +197,7 @@ SLQC:[
 
 const orings = [
 ['','-- Select --'],
+['NONE','None'],
 ['SIL','FEP-encapsulated Silicone o-ring'],
 ['FKM','FEP-encapsulated FKM o-ring'],
 ['EPDM','FEP-encapsulated EPDM o-ring']
@@ -259,7 +260,7 @@ return null;
 
 const others = [
 
-["Chemical keycode (SLQC choose 00-N/A)",[
+["Chemical keycode",[
 ['','-- Select --'],
 ['00','00-N/A'],
 ['01','01-Nitric acid / Red'],
@@ -318,7 +319,7 @@ html+=row('B1','Weep hole options');
 
 html+=row('C0','Drum insert series');
 html+=row('C1','Drum insert type');
-html+=row('C2','O-ring for shipping cap (No O-ring for SLQC, choose anyone)');
+html+=row('C2','O-ring for shipping cap');
 
 others.forEach((d,i)=>html+=row(`O${i}`,d[0]));
 
@@ -386,10 +387,31 @@ fill('C1',[['','-- Select --'],...types[s]]);
 
 /* o-ring */
 let oSelect = document.getElementById('C2');
-oSelect.disabled = !t || skip;
+
+if(s === 'SLQC'){
+  fill('C2', [
+    ['NONE','None']
+  ]);
+  oSelect.value = 'NONE';
+  oSelect.disabled = true;
+}
+else{
+  if(oSelect.options.length <= 1 || oSelect.options[0].value === 'NONE'){
+    fill('C2', orings.filter(o => o[0] !== 'NONE'));
+  }
+  oSelect.disabled = !t || skip;
+}
 
 /* chemical */
-document.getElementById('O0').disabled = skip;
+let chemSelect = document.getElementById('O0');
+
+if(s === 'SLQC'){
+  chemSelect.value = '00';
+  chemSelect.disabled = true;
+}
+else{
+  chemSelect.disabled = skip;
+}
 
 /* shipping cap */
 let shipCap = document.getElementById('O2');
@@ -429,7 +451,9 @@ let baseText   = getText('S0');
 let seriesText = getText('C0');
 let typeText   = getText('C1');
 let bungText   = getText('B0');
-let shipText   = skip ? 'N/A' : getText('C2');
+let shipText = (s === 'SLQC')
+  ? 'None'
+  : (skip ? 'N/A' : getText('C2'));
 let chemText = getText('O0');
 
 let line1 = baseText ? `Base package - <b>${baseText}</b>` : '';
@@ -455,7 +479,7 @@ let parts = [
 val('S0'),
 B,
 C,
-skip ? '0' : val('O0'),
+(s === 'SLQC') ? '00' : (skip ? '0' : val('O0')),
 val('O1'),
 shipCap.value,
 val('O3'),
