@@ -92,6 +92,25 @@ select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
     font-size:18px;
   }
 }
+
+/* Drum explanation image */
+.drum-image{
+  margin-top:20px;
+  text-align:center;
+}
+
+.drum-image img{
+  width:100%;
+  max-width:450px;
+  height:auto;
+  border-radius:8px;
+}
+
+@media (max-width:768px){
+  .drum-image img{
+    max-width:100%;
+  }
+}
 </style>
 </head>
 
@@ -106,13 +125,27 @@ select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;}
 </div>
 
 <div class="card">
-<h3>Result</h3>
-<div id="output" class="output">-</div>
-<div id="status"></div>
-<div id="drumSpec" style="margin-top:10px;font-size:14px;line-height:1.6;"></div>
-<button onclick="copyPN()">Copy Part Number</button>
-<div id="toolSpec" style="margin-top:10px;font-size:14px;color:#006600;font-weight:600;"></div>
+  <h3>Result</h3>
+
+  <div id="output" class="output">-</div>
+
+  <div id="status"></div>
+
+  <div id="drumSpec"
+       style="margin-top:10px;font-size:14px;line-height:1.6;">
+  </div>
+
+  <button onclick="copyPN()">Copy Part Number</button>
+
+  <div id="toolSpec"
+       style="margin-top:10px;font-size:14px;color:#006600;font-weight:600;">
+  </div>
+
+  <!-- Drum Explanation Image -->
+  <div class="drum-image">
+    <img src="Drum explanation.png">
 </div>
+
 </div>
 
 <script>
