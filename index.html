@@ -169,16 +169,22 @@ const toolMap = {
 const basePackage = [
 ['','-- Select --'],
 ['T2','T2-Trilayer / Light blue'],
-['T8','T8-Advantage / Dark blue']
+['T8','T8-Advantage / Dark blue'],
+['XF','XF-PGI Trilayer / Light blue'],
+['XG','XG-PGI Advantage / Dark blue']
 ];
 
 /* ===== Section B ===== */
 
-const B_material = [
+const B_material_std = [
 ['','-- Select --'],
 ['POE','POE O-rings'],
 ['EPDM','EPDM O-rings'],
 ['FKM','FKM O-rings']
+];
+
+const B_material_pgi = [
+['6','FEP-encapsulated Silicone']
 ];
 
 const B_weep = [
@@ -188,8 +194,15 @@ const B_weep = [
 ];
 
 function getSectionB(){
+
+let base = val('S0');
 let m = val('B0');
 let w = val('B1');
+
+if(base==='XF' || base==='XG'){
+    return '6';
+}
+
 if(!m || !w) return null;
 
 if(m==='EPDM' && w==='N') return '1';
@@ -198,7 +211,9 @@ if(m==='EPDM' && w==='Y') return '4';
 if(m==='FKM'  && w==='Y') return '5';
 if(m==='POE'  && w==='N') return 'A';
 if(m==='POE'  && w==='Y') return 'B';
+
 return null;
+
 }
 
 /* ===== Section C ===== */
@@ -230,7 +245,6 @@ SLQC:[
 
 const orings = [
 ['','-- Select --'],
-['NONE','None'],
 ['SIL','FEP-encapsulated Silicone o-ring'],
 ['FKM','FEP-encapsulated FKM o-ring'],
 ['EPDM','FEP-encapsulated EPDM o-ring']
@@ -359,7 +373,7 @@ others.forEach((d,i)=>html+=row(`O${i}`,d[0]));
 document.getElementById('selector').innerHTML=html;
 
 fill('S0',basePackage);
-fill('B0',B_material);
+fill('B0',B_material_std);
 fill('B1',B_weep);
 fill('C0',series);
 fill('C2',orings);
@@ -369,10 +383,12 @@ update();
 }
 
 function row(id,label){
-return `<div class="row">
+return `
+<div class="row" id="row_${id}">
 <label>${label}</label>
 <select id="${id}"></select>
-</div>`;
+</div>
+`;
 }
 
 function fill(id,opts){
@@ -402,166 +418,387 @@ return document.getElementById(id)?.value;
 
 function update(){
 
-let s = val('C0');
-let t = val('C1');
-let skip = (s==='NONE');
+  let s = val('C0');
+  let t = val('C1');
 
-/* type */
+  let base = val('S0');
+  let isPGI = (base === 'XF' || base === 'XG');
+
+  /* ================= PGI Logic ================= */
+
+  let bungSelect = document.getElementById('B0');
+  let weepSelect = document.getElementById('B1');
+  let c0 = document.getElementById('C0');
+
+  /* XF/XG 固定 Silicone O-ring */
+  if(isPGI){
+
+      if(
+        !bungSelect.options.length ||
+        bungSelect.options[0].value !== '6'
+      ){
+          fill('B0', B_material_pgi);
+      }
+
+      bungSelect.value = '6';
+      bungSelect.disabled = true;
+
+      weepSelect.value = '';
+      weepSelect.disabled = true;
+
+      document.getElementById('row_B1').style.display = 'none';
+
+  }
+  else{
+
+      if(
+        bungSelect.options.length &&
+        bungSelect.options[0].value === '6'
+      ){
+          fill('B0', B_material_std);
+      }
+
+      bungSelect.disabled = false;
+
+      weepSelect.disabled = false;
+      document.getElementById('row_B1').style.display = '';
+
+  }
+
+  /* XF/XG 隱藏 SLQC */
+  for(let i=0;i<c0.options.length;i++){
+
+      if(c0.options[i].value === 'SLQC'){
+
+          c0.options[i].hidden = isPGI;
+
+      }
+
+  }
+
+  if(isPGI && c0.value === 'SLQC'){
+
+      c0.value = '';
+
+      s = '';
+      t = '';
+
+  }
+
+/* ================= Type ================= */
+
 let typeSelect = document.getElementById('C1');
+
+let skip = (s === 'NONE');
+
 if(!s || skip){
-typeSelect.disabled = true;
-fill('C1',[['','-- Select --']]);
-}else{
-typeSelect.disabled = false;
-if(typeSelect.options.length<=1){
-fill('C1',[['','-- Select --'],...types[s]]);
+
+    typeSelect.disabled = true;
+
+    fill('C1',[
+      ['','-- Select --']
+    ]);
+
 }
+else{
+
+    typeSelect.disabled = false;
+
+    if(isPGI && s === 'QCII'){
+
+        let current = typeSelect.value;
+
+        fill('C1',[
+            ['DIT','DIT PFA QCII']
+        ]);
+
+        typeSelect.value = 'DIT';
+
+    }
+    else{
+
+        let current = typeSelect.value;
+
+        fill('C1',[
+          ['','-- Select --'],
+          ...types[s]
+        ]);
+
+        if(current){
+            typeSelect.value = current;
+        }
+
+    }
+
 }
 
-/* o-ring */
+/* refresh value */
+
+s = val('C0');
+t = val('C1');
+skip = (s === 'NONE');
+
+
+/* ================= O-ring ================= */
+
 let oSelect = document.getElementById('C2');
 
 if(s === 'SLQC'){
-  fill('C2', [
-    ['NONE','None']
-  ]);
-  oSelect.value = 'NONE';
-  oSelect.disabled = true;
+
+    fill('C2',[
+      ['NONE','None']
+    ]);
+
+    oSelect.value = 'NONE';
+    oSelect.disabled = true;
+
 }
 else{
-  if(oSelect.options.length <= 1 || oSelect.options[0].value === 'NONE'){
-    fill('C2', orings.filter(o => o[0] !== 'NONE'));
-  }
-  oSelect.disabled = !t || skip;
+
+    let current = oSelect.value;
+
+    fill('C2', orings);
+
+    if(
+      current &&
+      current !== 'NONE'
+    ){
+        oSelect.value = current;
+    }
+
+    oSelect.disabled = !t || skip;
+
 }
 
-/* chemical */
+/* ================= Chemical ================= */
+
 let chemSelect = document.getElementById('O0');
 
 if(s === 'SLQC'){
-  chemSelect.value = '00';
-  chemSelect.disabled = true;
+
+    chemSelect.value = '00';
+    chemSelect.disabled = true;
+
 }
 else{
-  chemSelect.disabled = skip;
+
+    chemSelect.disabled = skip;
+
+    /* QCII / QCIII 不允許 00 */
+
+    let hide00 =
+        (s === 'QCII' || s === 'QCIII');
+
+    for(let i=0;i<chemSelect.options.length;i++){
+
+        if(chemSelect.options[i].value === '00'){
+
+            chemSelect.options[i].hidden = hide00;
+
+        }
+
+    }
+
+    if(
+        hide00 &&
+        chemSelect.value === '00'
+    ){
+        chemSelect.value = '';
+    }
+
 }
 
-/* shipping cap */
-let shipCap = document.getElementById('O2');
-if(skip){
-shipCap.disabled = true;
-shipCap.value = '0';
-}else{
-shipCap.disabled = false;
-}
+  /* ================= Shipping cap ================= */
 
-/* special */
+  let shipCap = document.getElementById('O2');
+
+  if(skip){
+
+      shipCap.disabled = true;
+      shipCap.value = '0';
+
+  }
+  else{
+
+      shipCap.disabled = false;
+
+  }
+
+/* ================= Special ================= */
+
 let special = document.getElementById('O1');
 
 if(skip){
-fill('O1',[['0','Standard']]);
-special.value='0';
+
+    fill('O1',[
+      ['0','Standard']
+    ]);
+
+    special.value = '0';
+    special.disabled = true;
+
 }
 else if(t && t.includes('DT3P')){
-fill('O1',[['3','QCIII no serial tag']]);
-special.value='3';
+
+    fill('O1',[
+      ['3','QCIII no serial tag']
+    ]);
+
+    special.value = '3';
+    special.disabled = true;
+
 }
 else{
-if(special.options.length<=2){
-fill('O1',others[1][1]);
-}
-}
 
-/* ✅ Drum spec 修正 */
+    if(
+      special.options.length === 1 ||
+      special.options[0].value === '3'
+    ){
 
-function getText(id){
-let el = document.getElementById(id);
-if(!el || !el.value) return '';
-return el.options[el.selectedIndex].text;
-}
+        fill('O1', others[1][1]);
 
-let baseText   = getText('S0');
-let seriesText = getText('C0');
-let typeText   = getText('C1');
-let bungText   = getText('B0');
-let shipText = (s === 'SLQC')
-  ? 'None'
-  : (skip ? 'N/A' : getText('C2'));
-let chemText = getText('O0');
+    }
 
-let line1 = baseText ? `Base package - <b>${baseText}</b>` : '';
-let line2 = (seriesText || typeText)
-  ? `Drum insert - <b>${seriesText}${typeText ? ' + ' + typeText : ''}</b>`
-  : '';
-let line3 = chemText
-  ? `Keycode - <b>${chemText}</b>`
-  : '';
-let line4 = (bungText || shipText)
-  ? `O-ring for bung - <b>${bungText}</b><br>O-ring for DI shipping cap - <b>${shipText}</b>`
-  : '';
+    special.disabled = false;
 
-document.getElementById("drumSpec").innerHTML =
-[line1,line2,line3,line4].filter(x=>x).join("<br>");
-
-/* PN */
-
-let B = getSectionB();
-let C = getSectionC();
-
-let parts = [
-val('S0'),
-B,
-C,
-(s === 'SLQC') ? '00' : (skip ? '0' : val('O0')),
-val('O1'),
-shipCap.value,
-val('O3'),
-val('O4')
-];
-
-let pn = '';
-let complete = true;
-
-parts.forEach(p=>{
-if(!p){
-complete=false;
-}else{
-pn += p;
-}
-});
-
-document.getElementById("output").innerText = pn || "-";
-
-/* ===== Recommend Tool ===== */
-
-let seriesVal = document.getElementById('C0')?.value || 'NONE';
-
-console.log("seriesVal:", seriesVal);
-console.log("tool:", toolMap[seriesVal]);
-
-let toolText = '';
-
-if(seriesVal && toolMap[seriesVal]){
-  toolText = `Assembly tool - <br><b>${toolMap[seriesVal]}</b>`;
 }
 
-document.getElementById("toolSpec").innerHTML = toolText;
+  /* ================= Drum Spec ================= */
 
+  function getText(id){
 
-let status = document.getElementById("status");
+      let el = document.getElementById(id);
 
-if(!complete){
-  status.innerText="⚠ Please complete all required selections";
-  status.className="status warn";
-}
-else if(pn.includes('XX')){
-status.innerText="⚠ Contact Entegris required";
-status.className="status warn";
-}
-else{
-status.innerText="✔ Valid configuration";
-status.className="status valid";
-}
+      if(!el || !el.value) return '';
+
+      return el.options[el.selectedIndex].text;
+
+  }
+
+  let baseText   = getText('S0');
+  let seriesText = getText('C0');
+  let typeText   = getText('C1');
+  let bungText   = getText('B0');
+
+  let shipText =
+    (s === 'SLQC')
+    ? 'None'
+    : (skip ? 'N/A' : getText('C2'));
+
+  let chemText = getText('O0');
+
+  let line1 =
+    baseText
+      ? `Base package - <b>${baseText}</b>`
+      : '';
+
+  let line2 =
+    (seriesText || typeText)
+      ? `Drum insert - <b>${seriesText}${typeText ? ' + ' + typeText : ''}</b>`
+      : '';
+
+  let line3 =
+    chemText
+      ? `Keycode - <b>${chemText}</b>`
+      : '';
+
+  let line4 =
+    (bungText || shipText)
+      ? `O-ring for bung - <b>${bungText}</b><br>O-ring for DI shipping cap - <b>${shipText}</b>`
+      : '';
+
+  document.getElementById("drumSpec").innerHTML =
+    [line1,line2,line3,line4]
+      .filter(x=>x)
+      .join("<br>");
+
+  /* ================= PN ================= */
+
+  let B = getSectionB();
+  let C = getSectionC();
+
+  let parts = [
+
+    val('S0'),
+
+    B,
+
+    C,
+
+    (s === 'SLQC')
+      ? '00'
+      : (skip ? '0' : val('O0')),
+
+    val('O1'),
+
+    shipCap.value,
+
+    val('O3'),
+
+    val('O4')
+
+  ];
+
+  let pn = '';
+  let complete = true;
+
+  parts.forEach(p=>{
+
+      if(!p){
+
+          complete = false;
+
+      }
+      else{
+
+          pn += p;
+
+      }
+
+  });
+
+  document.getElementById("output").innerText =
+      pn || "-";
+
+  /* ================= Tool ================= */
+
+  let seriesVal =
+      document.getElementById('C0')?.value || 'NONE';
+
+  document.getElementById("toolSpec").innerHTML =
+      toolMap[seriesVal]
+      ? `Assembly tool - <br><b>${toolMap[seriesVal]}</b>`
+      : '';
+
+  /* ================= Status ================= */
+
+  let status =
+      document.getElementById("status");
+
+  if(!complete){
+
+      status.innerText =
+          "⚠ Please complete all required selections";
+
+      status.className = "status warn";
+
+  }
+  else if(pn.includes('XX')){
+
+      status.innerText =
+          "⚠ Contact Entegris required";
+
+      status.className = "status warn";
+
+  }
+  else{
+
+      status.innerText =
+          "✔ Valid configuration";
+
+      status.className = "status valid";
+
+  }
 
 }
 
