@@ -712,53 +712,67 @@ else{
       .filter(x=>x)
       .join("<br>");
 
-  /* ================= PN ================= */
+/* ================= PN ================= */
 
-  let B = getSectionB();
-  let C = getSectionC();
+let B = getSectionB();
+let C = getSectionC();
 
-  let parts = [
+let keyCode =
+    (s === 'NONE' || s === 'SLQC')
+    ? '00'
+    : val('O0');
 
-    val('S0'),
+let specialCode =
+    skip ? '0' : val('O1');
 
-    B,
+let shippingCode =
+    skip ? '0' : shipCap.value;
 
-    C,
+let manufacturingCode =
+    val('O3');
 
-    (s === 'SLQC')
-      ? '00'
-      : (skip ? '0' : val('O0')),
+let assemblyCode =
+    val('O4');
 
-    val('O1'),
+let parts = [
 
-    shipCap.value,
+    val('S0'),            // 2碼
 
-    val('O3'),
+    B,                    // 1碼
 
-    val('O4')
+    C,                    // 2碼
 
-  ];
+    keyCode,              // 2碼
 
-  let pn = '';
-  let complete = true;
+    specialCode,          // 1碼
 
-  parts.forEach(p=>{
+    shippingCode,         // 1碼
 
-      if(!p){
+    manufacturingCode,    // 1碼
 
-          complete = false;
+    assemblyCode          // 1碼
 
-      }
-      else{
+];
 
-          pn += p;
+/* 檢查是否有空值 */
 
-      }
+let missingField =
+    parts.some(
+        p => p === null ||
+             p === undefined ||
+             p === ''
+    );
 
-  });
+let pn = '';
 
-  document.getElementById("output").innerText =
-      pn || "-";
+if(!missingField){
+
+    pn = parts.join('');
+
+}
+
+document.getElementById("output").innerText =
+    pn || "-";
 
   /* ================= Tool ================= */
 
@@ -770,35 +784,63 @@ else{
       ? `Assembly tool - <br><b>${toolMap[seriesVal]}</b>`
       : '';
 
-  /* ================= Status ================= */
+/* ================= Status ================= */
 
-  let status =
-      document.getElementById("status");
+let status =
+    document.getElementById("status");
 
-  if(!complete){
+if(missingField){
 
-      status.innerText =
-          "⚠ Please complete all required selections";
+    status.innerText =
+      "⚠ Please complete all required selections";
 
-      status.className = "status warn";
+    status.className =
+      "status warn";
+}
 
-  }
-  else if(pn.includes('XX')){
+/* QCII / QCIII 禁止使用 00 */
 
-      status.innerText =
-          "⚠ Contact Entegris required";
+else if(
+    (s === 'QCII' || s === 'QCIII') &&
+    keyCode === '00'
+){
 
-      status.className = "status warn";
+    status.innerText =
+      "⚠ QCII/QCIII cannot use 00-N/A keycode";
 
-  }
-  else{
+    status.className =
+      "status warn";
+}
 
-      status.innerText =
-          "✔ Valid configuration";
+/* PN 長度驗證 */
 
-      status.className = "status valid";
+else if(pn.length !== 11){
 
-  }
+    status.innerText =
+      `⚠ Invalid Part Number Length (${pn.length}/11)`;
+
+    status.className =
+      "status warn";
+}
+
+else if(pn.includes('XX')){
+
+    status.innerText =
+      "⚠ Contact Entegris required";
+
+    status.className =
+      "status warn";
+}
+
+else{
+
+    status.innerText =
+      "✔ Valid configuration";
+
+    status.className =
+      "status valid";
+}
+
 
 }
 
@@ -816,6 +858,10 @@ alert("Copied: "+t);
 
 
 render();
+document.getElementById('O3').value = '0';
+document.getElementById('O4').value = '0';
+
+update();
 
 </script>
 
