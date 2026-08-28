@@ -305,6 +305,22 @@ return null;
 
 /* ================= Other ================= */
 
+const shippingCapStd = [
+    ['','-- Select --'],
+    ['0','Standard'],
+    ['3','Manual relief shipping cap'],
+    ['6','Vented shipping cap on DI']
+];
+
+const shippingCapQCII = [
+    ['','-- Select --'],
+    ['0','Standard'],
+    ['3','Manual relief shipping cap'],
+    ['6','Vented shipping cap on DI'],
+    ['4','No 1/8" downtube (QCII only)'],
+    ['5','1/8" port plugged (QCII only)']
+];
+
 const others = [
 
 ["Chemical keycode",[
@@ -608,22 +624,39 @@ else{
 
 }
 
-  /* ================= Shipping cap ================= */
+/* ================= Shipping cap ================= */
 
-  let shipCap = document.getElementById('O2');
+let shipCap = document.getElementById('O2');
 
-  if(skip){
+if(s === 'QCII'){
 
-      shipCap.disabled = true;
-      shipCap.value = '0';
+    fill('O2', shippingCapQCII);
 
-  }
-  else{
+}
+else{
 
-      shipCap.disabled = false;
+    fill('O2', shippingCapStd);
 
-  }
+    if(shipCap.value === '4' ||
+       shipCap.value === '5'){
 
+        shipCap.value = '0';
+
+    }
+
+}
+
+if(skip){
+
+    shipCap.disabled = true;
+    shipCap.value = '0';
+
+}
+else{
+
+    shipCap.disabled = false;
+
+}
 /* ================= Special ================= */
 
 let special = document.getElementById('O1');
